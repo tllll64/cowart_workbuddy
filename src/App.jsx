@@ -491,6 +491,10 @@ function CowartToolbarItem({ toolId }) {
   return <TldrawUiMenuToolItem toolId={toolId} isSelected={isSelected} />
 }
 
+function CowartToolbarDivider() {
+  return <div aria-orientation="vertical" className="cowart-toolbar-divider" role="separator" />
+}
+
 function CowartToolbar(props) {
   return (
     <DefaultToolbar {...props}>
@@ -498,12 +502,13 @@ function CowartToolbar(props) {
       <HandToolbarItem />
       <CowartToolbarItem toolId={AI_IMAGE_TOOL_ID} />
       <CowartToolbarItem toolId={ANNOTATION_TOOL_ID} />
+      <CowartToolbarDivider />
+      <AssetToolbarItem />
       <DrawToolbarItem />
       <EraserToolbarItem />
-      <ArrowToolbarItem />
       <TextToolbarItem />
+      <ArrowToolbarItem />
       <NoteToolbarItem />
-      <AssetToolbarItem />
       <RectangleToolbarItem />
       <EllipseToolbarItem />
       <TriangleToolbarItem />
@@ -611,48 +616,6 @@ function writeCowartSelectionState(selectionSnapshot) {
     ...selectionSnapshot,
     updatedAt: new Date().toISOString()
   })
-}
-
-function getAiImageFrameChildUpdates(editor) {
-  const { store } = editor.store.getStoreSnapshot()
-  const updates = []
-
-  for (const shape of Object.values(store)) {
-    if (shape?.typeName !== 'shape' || shape.type !== 'image') continue
-
-    const holderId = shape.meta?.cowartGeneratedForAiImageHolder
-    if (!holderId) continue
-
-    const holder = store[holderId]
-    if (
-      holder?.typeName !== 'shape' ||
-      holder.type !== 'frame' ||
-      holder.meta?.cowartAiImageHolder !== true
-    ) {
-      continue
-    }
-
-    const nextProps = {}
-    if (shape.props.w !== holder.props.w) nextProps.w = holder.props.w
-    if (shape.props.h !== holder.props.h) nextProps.h = holder.props.h
-
-    const update = {
-      id: shape.id,
-      type: 'image'
-    }
-
-    if (shape.parentId !== holder.id) update.parentId = holder.id
-    if (shape.x !== 0) update.x = 0
-    if (shape.y !== 0) update.y = 0
-    if (shape.rotation !== 0) update.rotation = 0
-    if (Object.keys(nextProps).length > 0) update.props = nextProps
-
-    if (Object.keys(update).length > 2) {
-      updates.push(update)
-    }
-  }
-
-  return updates
 }
 
 export default function App() {
@@ -792,23 +755,8 @@ export default function App() {
     let isSaving = false
     let hasPendingSave = false
     let hasUnsavedChanges = false
-    let isSyncingAiImageFrameChildren = false
     let isSyncingAnnotationLabelColor = false
     let remoteLoadController = null
-
-    function syncAiImageFrameChildren() {
-      if (isSyncingAiImageFrameChildren) return
-
-      const updates = getAiImageFrameChildUpdates(editor)
-      if (updates.length === 0) return
-
-      isSyncingAiImageFrameChildren = true
-      try {
-        editor.updateShapes(updates)
-      } finally {
-        isSyncingAiImageFrameChildren = false
-      }
-    }
 
     async function saveCanvas() {
       if (!hasUnsavedChanges) return
@@ -842,7 +790,6 @@ export default function App() {
     }
 
     function scheduleSave() {
-      syncAiImageFrameChildren()
       hasUnsavedChanges = true
       window.clearTimeout(saveTimer)
       saveTimer = window.setTimeout(saveCanvas, 500)

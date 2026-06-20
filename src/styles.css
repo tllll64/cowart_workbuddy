@@ -33,3 +33,14 @@ body {
   place-items: center;
   color: #4a5568;
 }
+
+.cowart-toolbar-divider {
+  align-self: center;
+  flex: 0 0 auto;
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  pointer-events: none;
+  background: #d1d5db;
+  border-radius: 1px;
+}
