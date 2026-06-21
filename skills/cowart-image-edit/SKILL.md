@@ -1,6 +1,6 @@
 ---
 name: cowart-image-edit
-description: Generate new AI images from user-supplied Cowart annotation screenshots. Use when the user provides one or more screenshots showing Cowart images marked with the 批注 tool, arrows, or visible edit notes and wants Codex to apply those requested changes, create revised bitmap images, and place each result beside the corresponding original or in a nearby clear area without replacing, moving, hiding, or deleting the original images or annotations.
+description: Generate new AI images from user-supplied Cowart annotation screenshots. Use when the user provides one or more screenshots showing Cowart images marked with the 批注 tool, arrows, or visible edit notes and wants WorkBuddy to apply those requested changes, create revised bitmap images, and place each result beside the corresponding original or in a nearby clear area without replacing, moving, hiding, or deleting the original images or annotations.
 ---
 
 # Cowart Image Edit
@@ -9,11 +9,11 @@ Use this skill to turn user-provided Cowart 批注 screenshots into revised AI-g
 
 ## Preconditions
 
-The Cowart service should be running for the active project, usually at:
+The Cowart service should be running for the active project. The actual URL is whatever `scripts/start-canvas.sh` printed on the `Local:` line — typically `http://127.0.0.1:43217/`, but vite may have migrated to `43218`, `43219`, etc. when the preferred port was busy. Never hardcode the URL; read it from the server log or pass the live value as `cowartUrl` to `insert_cowart_image`.
 
-```text
-http://127.0.0.1:43217
-```
+If the Cowart MCP tools (`get_cowart_selection`, `insert_cowart_image`) are not visible in the conversation, tell the user (in the user's language):
+
+> 我看不到 Cowart MCP 工具。请在 WorkBuddy 主界面对话输入框上方的连接器栏里找到 `cowart_mcp`，点击右侧的"信任"按钮，再切换为"打开"。然后完全退出 WorkBuddy（Cmd+Q）并重新打开，回到这里开新对话。
 
 The user is responsible for providing the relevant screenshot(s). Do not auto-capture the current canvas and do not scan the whole canvas to infer edit requests; a canvas may contain many images with different annotations.
 
@@ -58,13 +58,13 @@ The user is responsible for providing the relevant screenshot(s). Do not auto-ca
    annotation-edit-20260620-153012.png
    ```
 
-   Resolve the actual local output image carefully before inserting it into Cowart. Do not assume the built-in image generation flow always writes a fresh file under `$CODEX_HOME/generated_images`.
+   Resolve the actual local output image carefully before inserting it into Cowart. Do not assume the built-in image generation flow always writes a fresh file at a predictable system location.
 
    Preferred resolution order:
 
-   - Use the exact local image path returned by the current image generation tool call when one is available.
-   - If no new file path is returned, inspect the current Codex session JSONL for the current request and extract the PNG/base64 payload from the latest `image_generation_call.result`, then write it to the timestamped output filename.
-   - Use `$CODEX_HOME/generated_images` only when you can prove the file was created by the current request, for example by matching its timestamp after this generation step. Never pick an older image merely because it is the newest file in a stale generated_images directory.
+   - Use the exact local image path returned by the current `ImageGen` tool call when one is available.
+   - If no new file path is returned, inspect the current WorkBuddy session log for the current request and extract the PNG/base64 payload from the latest image generation result, then write it to the timestamped output filename.
+   - Use any auto-managed `generated-images` directory only when you can prove the file was created by the current request, for example by matching its timestamp after this generation step. Never pick an older image merely because it is the newest file in a stale directory.
 
    Before inserting the resolved file into Cowart, visually inspect the local bitmap and confirm it is the newly generated revised image for this screenshot, not a stale generated asset.
 
@@ -116,8 +116,8 @@ The user is responsible for providing the relevant screenshot(s). Do not auto-ca
    ```json
    {
      "imagePath": "/absolute/path/to/annotation-edit-20260620-153012.png",
-     "projectDir": "/absolute/path/to/user/codex-project",
-     "cowartUrl": "http://127.0.0.1:43217",
+     "projectDir": "/absolute/path/to/user/workbuddy-project",
+     "cowartUrl": "<live-cowart-url-from-server-log>",
      "anchorShapeId": "<selected source image or frame id>",
      "placement": "right",
      "margin": 40,
@@ -131,8 +131,7 @@ The user is responsible for providing the relevant screenshot(s). Do not auto-ca
    }
    ```
 
-   If the running Cowart service uses a Vite fallback port, pass the actual
-   browser URL such as `http://127.0.0.1:43218` as `cowartUrl`.
+   The running Cowart server may sit on `http://127.0.0.1:43217/`, `43218`, `43219`, or any next free port that vite picked. Use the URL printed by `scripts/start-canvas.sh`; never hardcode `43217`.
 
    The MCP tool must return the new `assetId`, `shapeId`, saved asset path,
    page id, bounds, and generated `index`. Confirm that the returned `index` is
@@ -142,10 +141,12 @@ The user is responsible for providing the relevant screenshot(s). Do not auto-ca
    save through:
 
    ```bash
-   curl -s -X PUT http://127.0.0.1:43217/api/canvas \
+   curl -s -X PUT <cowart-url>/api/canvas \
      -H 'content-type: application/json' \
      --data-binary @<updated-snapshot.json>
    ```
+
+   Replace `<cowart-url>` with the live value from the server log.
 
    In fallback mode, use page-local image asset URLs:
 

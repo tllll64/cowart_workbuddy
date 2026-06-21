@@ -1,6 +1,6 @@
 ---
 name: cowart-image-gen
-description: Generate a final AI bitmap for the Cowart canvas, including any requested in-image text by default. Use when the user asks Codex to create, fill, replace, or place an AI-generated image on a Cowart canvas. If an AI 图片 holder is selected, fill that holder; otherwise generate the image and insert it into the current Cowart page.
+description: Generate a final AI bitmap for the Cowart canvas, including any requested in-image text by default. Use when the user asks WorkBuddy to create, fill, replace, or place an AI-generated image on a Cowart canvas. If an AI 图片 holder is selected, fill that holder; otherwise generate the image and insert it into the current Cowart page.
 ---
 
 # Cowart Image Gen
@@ -9,11 +9,11 @@ Use this skill when the user wants an AI-generated image placed onto the Cowart 
 
 ## Preconditions
 
-The Cowart service should be running for the user's active project, usually at:
+The Cowart service should be running for the user's active project. The actual URL is whatever `scripts/start-canvas.sh` printed on the `Local:` line — typically `http://127.0.0.1:43217/`, but vite may have migrated to `43218`, `43219`, etc. when the preferred port was busy. Never hardcode the URL; read it from the server log or pass the live value as `cowartUrl` to `insert_cowart_image`.
 
-```text
-http://127.0.0.1:43217
-```
+If the Cowart MCP tools (`get_cowart_selection`, `insert_cowart_image`) are not visible in the conversation, tell the user (in the user's language):
+
+> 我看不到 Cowart MCP 工具。请在 WorkBuddy 主界面对话输入框上方的连接器栏里找到 `cowart_mcp`，点击右侧的"信任"按钮，再切换为"打开"。然后完全退出 WorkBuddy（Cmd+Q）并重新打开，回到这里开新对话。
 
 New holders are tldraw `frame` shapes with:
 
@@ -31,13 +31,9 @@ meta flag. Support both shapes.
 
 ## Workflow
 
-1. Read the selected shape from Cowart:
+1. Read the selected shape from Cowart by calling the Cowart MCP `get_cowart_selection` tool.
 
-   ```bash
-   curl -s http://127.0.0.1:43217/api/selection
-   ```
-
-   You can also use the Cowart MCP `get_cowart_selection` tool if it is available.
+   Only fall back to `curl -s <cowart-url>/api/selection` when the MCP tool is unavailable. The `<cowart-url>` must be the URL printed by the running canvas server; do not hardcode `43217`.
 
 2. Check whether exactly one selected shape is an AI image holder. A holder is any selected shape with either:
 
@@ -73,13 +69,13 @@ meta flag. Support both shapes.
 
 4. Generate the bitmap with the built-in `imagegen` skill unless the user explicitly requests another image path. If the requested asset needs visible copy, labels, poster text, ad text, UI text, or typography, include that text directly in the image generation prompt and let the image model produce the final bitmap. Do not default to generating a text-free background and then adding text locally unless the user explicitly asks for local typography, deterministic text overlay, SVG/vector output, or another non-imagegen layout step.
 
-   Resolve the actual local output image carefully before inserting it into Cowart. Do not assume the built-in image generation flow always writes a fresh file under `$CODEX_HOME/generated_images`.
+   Resolve the actual local output image carefully before inserting it into Cowart. Do not assume the built-in image generation flow always writes a fresh file at a predictable system location.
 
    Preferred resolution order:
 
-   - Use the exact local image path returned by the current image generation tool call when one is available.
-   - If no new file path is returned, inspect the current Codex session JSONL for the current request and extract the PNG/base64 payload from the latest `image_generation_call.result`, then write it to a timestamped output filename.
-   - Use `$CODEX_HOME/generated_images` only when you can prove the file was created by the current request, for example by matching its timestamp after this generation step. Never pick an older image merely because it is the newest file in a stale generated_images directory.
+   - Use the exact local image path returned by the current `ImageGen` tool call when one is available.
+   - If no new file path is returned, inspect the current WorkBuddy session log for the current request and extract the PNG/base64 payload from the latest image generation result, then write it to a timestamped output filename.
+   - Use any auto-managed `generated-images` directory only when you can prove the file was created by the current request, for example by matching its timestamp after this generation step. Never pick an older image merely because it is the newest file in a stale directory.
 
    Before inserting the resolved file into Cowart, visually inspect the local bitmap and confirm it is the newly generated image for this request, not a stale generated asset.
 
@@ -110,13 +106,15 @@ meta flag. Support both shapes.
    - `props.assetId`: the new image asset id
    - `meta.cowartGeneratedStandalone`: `true`
 
-6. Do not delete the holder unless the user explicitly asks for replacement. Keeping the holder lets Codex identify the intended slot again later. In the standalone workflow, do not create a holder first unless the user explicitly asks for one.
+6. Do not delete the holder unless the user explicitly asks for replacement. Keeping the holder lets WorkBuddy identify the intended slot again later. In the standalone workflow, do not create a holder first unless the user explicitly asks for one.
 
 7. Save through Cowart's API or edit the page snapshot carefully:
 
    ```bash
-   curl -s http://127.0.0.1:43217/api/canvas
+   curl -s <cowart-url>/api/canvas
    ```
+
+   Replace `<cowart-url>` with the actual URL printed by the running canvas server (port is not always 43217).
 
    Prefer page-local asset URLs in the image asset:
 

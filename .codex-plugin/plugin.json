@@ -1,7 +1,7 @@
 {
   "name": "cowart",
   "version": "0.1.2",
-  "description": "A local infinite canvas for Codex, powered by tldraw and built for visual thinking, image generation, and annotation-driven edits.",
+  "description": "A local infinite canvas for WorkBuddy / Codex, powered by tldraw and built for visual thinking, image generation, and annotation-driven edits.",
   "author": {
     "name": "ZHONG XIN",
     "email": "zhongxin123456@gmail.com",
@@ -19,8 +19,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Cowart",
-    "shortDescription": "Create, annotate, and generate on a local infinite canvas in Codex.",
-    "longDescription": "Cowart brings a tldraw-powered infinite canvas into Codex for visual planning and creative iteration. Open a local canvas for the active project, sketch ideas, place AI image holders, generate images into selected slots, and turn annotated screenshots into revised image outputs while keeping canvas data in the user's project workspace.",
+    "shortDescription": "Create, annotate, and generate on a local infinite canvas in WorkBuddy / Codex.",
+    "longDescription": "Cowart brings a tldraw-powered infinite canvas into WorkBuddy (and Codex) for visual planning and creative iteration. Open a local canvas for the active project, sketch ideas, place AI image holders, generate images into selected slots, and turn annotated screenshots into revised image outputs while keeping canvas data in the user's project workspace.",
     "developerName": "ZHONG XIN",
     "category": "Productivity",
     "websiteURL": "https://www.jiqiren.ai",
