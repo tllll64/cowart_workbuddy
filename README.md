@@ -85,7 +85,7 @@ canvas/pages/<page-id>/cowart-canvas.json
 canvas/pages/<page-id>/assets/
 ```
 
-![在 WorkBuddy 中打开 Cowart 画布](assets/open-canvas.png)
+> 📷 WorkBuddy 版截图整理中，稍后补上。
 
 ### 生成新图
 
@@ -99,7 +99,7 @@ canvas/pages/<page-id>/assets/
 
 WorkBuddy 会调用内置 `ImageGen` 生成图片，并通过 `insert_cowart_image` 自动插入画布。
 
-![使用 Cowart 生成并插入新图](assets/generate-image.png)
+> 📷 WorkBuddy 版截图整理中，稍后补上。
 
 ### 根据标注图生成新图
 
@@ -113,7 +113,7 @@ WorkBuddy 会调用内置 `ImageGen` 生成图片，并通过 `insert_cowart_ima
 
 WorkBuddy 会读取截图里的标注和箭头，生成干净的修订图，并把结果放在原图旁边。原图和标注**不会**被删除或移动。
 
-![根据 Cowart 标注截图生成修订图](assets/annotation-edit.png)
+> 📷 WorkBuddy 版截图整理中，稍后补上。
 
 ## 技能
 
